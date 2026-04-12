@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Controle de Parcelas</title>
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg: #f8fafc;
+            --text: #1e293b;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container { max-width: 900px; margin: 0 auto; }
+
+        .resumo-geral {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .card-total {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            border-left: 5px solid var(--danger);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .card-total h2 { margin: 0; color: #64748b; font-size: 0.9rem; text-transform: uppercase; }
+        .card-total p { margin: 10px 0 0; font-size: 2rem; font-weight: bold; color: var(--danger); }
+
+        .card-input {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            display: grid;
+            grid-template-columns: 2fr 1fr 1fr 1fr auto;
+            gap: 10px;
+            align-items: end;
+        }
+
+        @media (max-width: 768px) {
+            .form-group { grid-template-columns: 1fr; }
+        }
+
+        input, button {
+            padding: 12px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            outline: none;
+            font-size: 1rem;
+        }
+
+        button {
+            cursor: pointer;
+            background: var(--primary);
+            color: white;
+            border: none;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+
+        button:hover { filter: brightness(1.2); }
+
+        .tabela-container {
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            text-align: left;
+            padding: 15px;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        th { background: #f8fafc; color: #64748b; font-size: 0.85rem; }
+
+        .valor-falta {
+            color: var(--danger);
+            font-weight: bold;
+            font-size: 0.9rem;
+        }
+
+        .btn-pay { background: var(--secondary); padding: 5px 10px; }
+        .btn-del { background: var(--danger); padding: 5px 10px; }
+
+        .progress-bg {
+            background: #e2e8f0;
+            height: 8px;
+            border-radius: 10px;
+            margin-top: 5px;
+            width: 100px;
+        }
+
+        .progress-fill {
+            background: var(--secondary);
+            height: 100%;
+            border-radius: 10px;
+            transition: width 0.4s;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>💰 Controle de Gastos</h1>
+
+    <!-- Resumo Total -->
+    <div class="resumo-geral">
+        <div class="card-total">
+            <h2>Dívida Total Restante</h2>
+            <p id="totalGeralFalta">R$ 0,00</p>
+        </div>
+    </div>
+
+    <!-- Formulário -->
+    <div class="card-input">
+        <div class="form-group">
+            <div>
+                <label>Descrição</label>
+                <input type="text" id="desc" placeholder="Ex: Celular">
+            </div>
+            <div>
+                <label>Valor Total</label>
+                <input type="number" id="valor" placeholder="R$">
+            </div>
+            <div>
+                <label>Total Parc.</label>
+                <input type="number" id="totalParc" placeholder="12">
+            </div>
+            <div>
+                <label>Pagas</label>
+                <input type="number" id="pagasParc" placeholder="0">
+            </div>
+            <button onclick="adicionarGasto()">Adicionar</button>
+        </div>
+    </div>
+
+    <!-- Tabela de Itens -->
+    <div class="tabela-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Descrição</th>
+                    <th>Valor Total</th>
+                    <th>Parcelas</th>
+                    <th>Progresso</th>
+                    <th>Quanto falta?</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody id="corpoTabela"></tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let gastos = JSON.parse(localStorage.getItem('meusGastos')) || [];
+
+    function adicionarGasto() {
+        const desc = document.getElementById('desc').value;
+        const valor = parseFloat(document.getElementById('valor').value);
+        const total = parseInt(document.getElementById('totalParc').value);
+        const pagas = parseInt(document.getElementById('pagasParc').value) || 0;
+
+        if (!desc || isNaN(valor) || isNaN(total)) {
+            alert("Preencha os campos corretamente!");
+            return;
+        }
+
+        const novoGasto = {
+            id: Date.now(),
+            desc,
+            valor,
+            total,
+            pagas
+        };
+
+        gastos.push(novoGasto);
+        atualizar();
+        limpar();
+    }
+
+    function pagarParcela(id) {
+        const item = gastos.find(g => g.id === id);
+        if (item.pagas < item.total) {
+            item.pagas++;
+            atualizar();
+        }
+    }
+
+    function excluir(id) {
+        if(confirm("Deseja remover este gasto?")) {
+            gastos = gastos.filter(g => g.id !== id);
+            atualizar();
+        }
+    }
+
+    function limpar() {
+        document.getElementById('desc').value = '';
+        document.getElementById('valor').value = '';
+        document.getElementById('totalParc').value = '';
+        document.getElementById('pagasParc').value = '';
+    }
+
+    function atualizar() {
+        localStorage.setItem('meusGastos', JSON.stringify(gastos));
+        render();
+    }
+
+    function formatar(valor) {
+        return valor.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+    }
+
+    function render() {
+        const corpo = document.getElementById('corpoTabela');
+        const displayTotal = document.getElementById('totalGeralFalta');
+        corpo.innerHTML = '';
+        
+        let totalDevedorGeral = 0;
+
+        gastos.forEach(g => {
+            const valorParcela = g.valor / g.total;
+            const parcelasRestantes = g.total - g.pagas;
+            const faltaPagarItem = parcelasRestantes * valorParcela;
+            const porcentagem = (g.pagas / g.total) * 100;
+
+            totalDevedorGeral += faltaPagarItem;
+
+            corpo.innerHTML += `
+                <tr>
+                    <td><strong>${g.desc}</strong></td>
+                    <td>${formatar(g.valor)}</td>
+                    <td>${g.pagas} / ${g.total}</td>
+                    <td>
+                        <div class="progress-bg">
+                            <div class="progress-fill" style="width: ${porcentagem}%"></div>
+                        </div>
+                        <small>${porcentagem.toFixed(0)}% pago</small>
+                    </td>
+                    <td class="valor-falta">
+                        Falta ${formatar(faltaPagarItem)}
+                        <br><small style="color: #64748b; font-weight: normal;">(${parcelasRestantes} parcelas)</small>
+                    </td>
+                    <td>
+                        <button class="btn-pay" onclick="pagarParcela(${g.id})" title="Pagar uma parcela">✔</button>
+                        <button class="btn-del" onclick="excluir(${g.id})">🗑</button>
+                    </td>
+                </tr>
+            `;
+        });
+
+        displayTotal.innerText = formatar(totalDevedorGeral);
+    }
+
+    // Iniciar
+    render();
+</script>
+
+</body>
+</html>
