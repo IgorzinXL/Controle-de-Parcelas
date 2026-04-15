@@ -3,81 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Parcelas - Cloud</title>
+    <title>Controle de Gastos Cloud</title>
     <style>
         :root { --primary: #4f46e5; --secondary: #10b981; --danger: #ef4444; --bg: #f8fafc; --text: #1e293b; }
         body { font-family: 'Segoe UI', sans-serif; background-color: var(--bg); color: var(--text); margin: 0; padding: 20px; }
         .container { max-width: 900px; margin: 0 auto; }
         
-        /* Telas */
         #login-screen { max-width: 400px; margin: 100px auto; background: white; padding: 30px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; }
         #app-content { display: none; }
 
-        .form-group-login { margin-bottom: 15px; text-align: left; }
-        input, button { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; box-sizing: border-box; margin-top: 5px; }
-        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; }
-        button:hover { filter: brightness(1.1); }
+        input, button { padding: 12px; border: 1px solid #e2e8f0; border-radius: 8px; width: 100%; box-sizing: border-box; margin-top: 5px; font-size: 1rem; }
+        button { background: var(--primary); color: white; border: none; font-weight: bold; cursor: pointer; transition: 0.3s; }
+        button:hover { opacity: 0.8; }
         
-        .header-app { display: flex; justify-content: space-between; align-items: center; }
+        .header-app { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
         .card-total { background: white; padding: 20px; border-radius: 12px; border-left: 5px solid var(--danger); box-shadow: 0 4px 6px rgba(0,0,0,0.1); text-align: center; margin-bottom: 20px; }
-        .card-total p { font-size: 2rem; font-weight: bold; color: var(--danger); margin: 5px 0; }
+        .card-total p { font-size: 2.2rem; font-weight: bold; color: var(--danger); margin: 5px 0; }
 
         .card-input { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; display: grid; grid-template-columns: 2fr 1fr 1fr 1fr auto; gap: 10px; align-items: end; }
         
-        table { width: 100%; background: white; border-collapse: collapse; border-radius: 12px; overflow: hidden; }
+        @media (max-width: 768px) { .card-input { grid-template-columns: 1fr; } }
+
+        table { width: 100%; background: white; border-collapse: collapse; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         th, td { padding: 15px; border-bottom: 1px solid #f1f5f9; text-align: left; }
-        th { background: #f8fafc; }
+        th { background: #f1f5f9; color: #64748b; font-size: 0.8rem; text-transform: uppercase; }
         
-        .progress-bg { background: #e2e8f0; height: 8px; border-radius: 10px; width: 100px; }
-        .progress-fill { background: var(--secondary); height: 100%; border-radius: 10px; }
-        .btn-pay { background: var(--secondary); width: auto; padding: 5px 10px; }
-        .btn-del { background: var(--danger); width: auto; padding: 5px 10px; }
-        .btn-logout { background: #64748b; width: auto; }
+        .progress-bg { background: #e2e8f0; height: 8px; border-radius: 10px; width: 100px; position: relative; }
+        .progress-fill { background: var(--secondary); height: 100%; border-radius: 10px; transition: 0.5s; }
+        
+        .btn-pay { background: var(--secondary); width: auto; padding: 6px 12px; }
+        .btn-del { background: var(--danger); width: auto; padding: 6px 12px; }
+        .btn-logout { background: #64748b; width: auto; padding: 8px 15px; }
     </style>
 </head>
 <body>
 
 <div class="container">
-    <!-- TELA DE LOGIN -->
+    <!-- LOGIN -->
     <div id="login-screen">
-        <h2 id="auth-title">Login Cloud</h2>
-        <div class="form-group-login">
-            <label>E-mail</label>
-            <input type="email" id="email" placeholder="seu@email.com">
-        </div>
-        <div class="form-group-login">
-            <label>Senha</label>
-            <input type="password" id="password" placeholder="Sua senha">
-        </div>
-        <button onclick="fazerLogin()">Entrar</button>
-        <button style="background: #64748b; margin-top: 10px;" onclick="criarConta()">Criar Nova Conta</button>
+        <h2>💰 Controle Cloud</h2>
+        <input type="email" id="email" placeholder="E-mail">
+        <input type="password" id="password" placeholder="Senha">
+        <button id="btnLogin">Entrar</button>
+        <button id="btnCadastrar" style="background: #64748b; margin-top: 10px;">Criar Conta</button>
     </div>
 
-    <!-- APP PRINCIPAL -->
+    <!-- APP -->
     <div id="app-content">
         <div class="header-app">
-            <h1>💰 Meus Gastos Online</h1>
-            <button class="btn-logout" onclick="sair()">Sair</button>
+            <h2 id="userWelcome">Olá!</h2>
+            <button class="btn-logout" id="btnLogout">Sair</button>
         </div>
 
         <div class="card-total">
-            <h2>Dívida Total Restante</h2>
+            <small>DÍVIDA TOTAL RESTANTE</small>
             <p id="totalGeral">R$ 0,00</p>
         </div>
 
         <div class="card-input">
             <div><label>Descrição</label><input type="text" id="desc"></div>
             <div><label>Valor Total</label><input type="number" id="valor"></div>
-            <div><label>Total Parc.</label><input type="number" id="totalP"></div>
-            <div><label>Pagas</label><input type="number" id="pagasP"></div>
-            <button onclick="salvarNovoGasto()">Adicionar</button>
+            <div><label>Parcelas</label><input type="number" id="totalP"></div>
+            <div><label>Pagas</label><input type="number" id="pagasP" value="0"></div>
+            <button id="btnSalvar">Adicionar</button>
         </div>
 
         <table>
             <thead>
                 <tr>
                     <th>Descrição</th>
-                    <th>Valor Total</th>
+                    <th>Total</th>
                     <th>Parcelas</th>
                     <th>Progresso</th>
                     <th>Falta</th>
@@ -89,19 +84,18 @@
     </div>
 </div>
 
-<!-- Scripts do Firebase (Configuração) -->
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
     import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
     import { getFirestore, collection, addDoc, onSnapshot, query, where, doc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-    // ATENÇÃO: COLOQUE SUAS CREDENCIAIS DO FIREBASE AQUI ABAIXO:
+    // --- CONFIGURAÇÃO DO FIREBASE (COLE A SUA AQUI) ---
     const firebaseConfig = {
         apiKey: "AIzaSyCSwlhenX6HsVSOAnZ7xJCuvQxdGwFaizU",
         authDomain: "controlefinanceiro-c217f.firebaseapp.com",
-        projectId: "controlefinanceiro-c217f",
+        projectId: "controlefinanceiro-c217f ",
         storageBucket: "controlefinanceiro-c217f.firebasestorage.app",
-        messagingSenderId: "544316643829",
+        messagingSenderId: " 544316643829",
         appId: "1:544316643829:web:604676ede2e575e6f928bc"
     };
 
@@ -109,100 +103,118 @@
     const auth = getAuth(app);
     const db = getFirestore(app);
 
-    let usuarioLogado = null;
+    let userUID = null;
 
-    // --- FUNÇÕES DE AUTENTICAÇÃO ---
-    window.fazerLogin = () => {
+    // --- AUTENTICAÇÃO ---
+    document.getElementById('btnLogin').addEventListener('click', () => {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('password').value;
-        signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Erro: " + e.message));
-    };
+        signInWithEmailAndPassword(auth, email, pass).catch(e => alert("Erro ao entrar: " + e.message));
+    });
 
-    window.criarConta = () => {
+    document.getElementById('btnCadastrar').addEventListener('click', () => {
         const email = document.getElementById('email').value;
         const pass = document.getElementById('password').value;
         createUserWithEmailAndPassword(auth, email, pass).then(() => alert("Conta criada!")).catch(e => alert(e.message));
-    };
+    });
 
-    window.sair = () => signOut(auth);
+    document.getElementById('btnLogout').addEventListener('click', () => signOut(auth));
 
     onAuthStateChanged(auth, (user) => {
         if (user) {
-            usuarioLogado = user;
+            userUID = user.uid;
+            document.getElementById('userWelcome').innerText = `Olá, ${user.email}`;
             document.getElementById('login-screen').style.display = 'none';
             document.getElementById('app-content').style.display = 'block';
-            ouvirDados();
+            carregarDados();
         } else {
             document.getElementById('login-screen').style.display = 'block';
             document.getElementById('app-content').style.display = 'none';
         }
     });
 
-    // --- FUNÇÕES DO BANCO DE DADOS (FIRESTORE) ---
-    window.salvarNovoGasto = async () => {
-        const gasto = {
-            userId: usuarioLogado.uid,
-            desc: document.getElementById('desc').value,
-            valor: parseFloat(document.getElementById('valor').value),
-            totalP: parseInt(document.getElementById('totalP').value),
-            pagasP: parseInt(document.getElementById('pagasP').value) || 0
-        };
+    // --- BANCO DE DADOS ---
+    document.getElementById('btnSalvar').addEventListener('click', async () => {
+        const desc = document.getElementById('desc').value;
+        const valor = parseFloat(document.getElementById('valor').value);
+        const totalP = parseInt(document.getElementById('totalP').value);
+        const pagasP = parseInt(document.getElementById('pagasP').value) || 0;
 
-        if (gasto.desc && gasto.valor) {
-            await addDoc(collection(db, "gastos"), gasto);
-            document.getElementById('desc').value = '';
-            document.getElementById('valor').value = '';
+        if (desc && !isNaN(valor)) {
+            try {
+                await addDoc(collection(db, "gastos"), {
+                    uid: userUID,
+                    desc,
+                    valor,
+                    totalP,
+                    pagasP,
+                    dataCriacao: new Date()
+                });
+                document.getElementById('desc').value = '';
+                document.getElementById('valor').value = '';
+                document.getElementById('totalP').value = '';
+            } catch (e) { alert("Erro ao salvar: " + e.message); }
+        } else {
+            alert("Preencha a descrição e o valor!");
         }
-    };
+    });
 
-    function ouvirDados() {
-        const q = query(collection(db, "gastos"), where("userId", "==", usuarioLogado.uid));
+    function carregarDados() {
+        const q = query(collection(db, "gastos"), where("uid", "==", userUID));
+        
+        // O onSnapshot mantém a página atualizada em tempo real
         onSnapshot(q, (snapshot) => {
-            let gastos = [];
-            snapshot.forEach(doc => gastos.push({ id: doc.id, ...doc.data() }));
-            render(gastos);
+            const tabela = document.getElementById('tabelaBody');
+            tabela.innerHTML = '';
+            let totalDevedor = 0;
+
+            snapshot.forEach((doc) => {
+                const item = doc.data();
+                const id = doc.id;
+                
+                const valorParcela = item.valor / item.totalP;
+                const parcelasRestantes = item.totalP - item.pagasP;
+                const faltaPagar = parcelasRestantes * valorParcela;
+                const perc = (item.pagasP / item.totalP) * 100;
+                
+                totalDevedor += faltaPagar;
+
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${item.desc}</strong></td>
+                    <td>R$ ${item.valor.toFixed(2)}</td>
+                    <td>${item.pagasP}/${item.totalP}</td>
+                    <td>
+                        <div class="progress-bg"><div class="progress-fill" style="width:${perc}%"></div></div>
+                        <small>${perc.toFixed(0)}%</small>
+                    </td>
+                    <td style="color:var(--danger); font-weight:bold">R$ ${faltaPagar.toFixed(2)}</td>
+                    <td>
+                        <button class="btn-pay" id="pay-${id}">✔</button>
+                        <button class="btn-del" id="del-${id}">🗑</button>
+                    </td>
+                `;
+                tabela.appendChild(tr);
+
+                // Eventos dos botões da tabela
+                document.getElementById(`pay-${id}`).onclick = () => pagarParcela(id, item.pagasP, item.totalP);
+                document.getElementById(`del-${id}`).onclick = () => excluirItem(id);
+            });
+
+            document.getElementById('totalGeral').innerText = `R$ ${totalDevedor.toFixed(2)}`;
         });
     }
 
-    window.pagarParcela = async (id, pagas, total) => {
-        if (pagas < total) {
-            const docRef = doc(db, "gastos", id);
-            await updateDoc(docRef, { pagasP: pagas + 1 });
+    async function pagarParcela(id, pagasP, totalP) {
+        if (pagasP < totalP) {
+            await updateDoc(doc(db, "gastos", id), { pagasP: pagasP + 1 });
         }
-    };
+    }
 
-    window.excluirGasto = async (id) => {
-        if (confirm("Excluir item?")) await deleteDoc(doc(db, "gastos", id));
-    };
-
-    function render(gastos) {
-        const corpo = document.getElementById('tabelaBody');
-        corpo.innerHTML = '';
-        let totalFaltaGeral = 0;
-
-        gastos.forEach(g => {
-            const valorParcela = g.valor / g.totalP;
-            const falta = (g.totalP - g.pagasP) * valorParcela;
-            const perc = (g.pagasP / g.totalP) * 100;
-            totalFaltaGeral += falta;
-
-            corpo.innerHTML += `
-                <tr>
-                    <td>${g.desc}</td>
-                    <td>R$ ${g.valor.toFixed(2)}</td>
-                    <td>${g.pagasP}/${g.totalP}</td>
-                    <td>
-                        <div class="progress-bg"><div class="progress-fill" style="width:${perc}%"></div></div>
-                    </td>
-                    <td style="color:red; font-weight:bold">R$ ${falta.toFixed(2)}</td>
-                    <td>
-                        <button class="btn-pay" onclick="pagarParcela('${g.id}', ${g.pagasP}, ${g.totalP})">✔</button>
-                        <button class="btn-del" onclick="excluirGasto('${g.id}')">🗑</button>
-                    </td>
-                </tr>
-            `;
-        });
-        document.getElementById('totalGeral').innerText = `R$ ${totalFaltaGeral.toFixed(2)}`;
+    async function excluirItem(id) {
+        if (confirm("Deseja remover este gasto?")) {
+            await deleteDoc(doc(db, "gastos", id));
+        }
     }
 </script>
 
